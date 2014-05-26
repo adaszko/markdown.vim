@@ -46,12 +46,28 @@ function! g:looking_at(regex) " {{{
     return ""
 endfunction " }}}
 
+function! g:open_in_browser(url) " {{{
+    if has('mac')
+        silent execute '!open ' . a:url
+        return
+    endif
+
+    if has('win32')
+        let cmd = printf('!cmd /c start "" "%s"', a:url)
+        echo cmd
+        silent execute cmd
+        return
+    endif
+
+    call s:warning('Unknown OS')
+endfunction " }}}
+
 function! g:markdown_open_link_at_point() " {{{
     let regex = '\v\[[^]]+\]\(https?://\S+\)'
     let markdown_link = g:looking_at(regex)
     if markdown_link != ''
         let url = matchstr(markdown_link, '\v\[[^]]+\]\(\zs[^)]+\ze\)')
-        silent execute '!open ' . url
+        call g:open_in_browser(url)
     else
         call s:warning('No URL found at point')
     endif
