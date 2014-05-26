@@ -10,6 +10,53 @@ let s:cpo_save = &cpo
 set cpo&vim
 
 
+function! s:warning(msg) " {{{
+    echohl WarningMsg
+    echo a:msg
+    echohl None
+endfunction " }}}
+
+function! g:looking_at(regex) " {{{
+    let start = 0
+    let line = getline(".")
+    let [_, _, curcol, _] = getpos(".")
+
+    while 1
+        if start > curcol
+            break
+        endif
+
+        let matchpos = match(line, a:regex, start)
+        if matchpos == -1
+            break
+        endif
+
+        let matchlen = strlen(matchstr(strpart(line, matchpos), a:regex))
+        if matchlen == 0
+            throw 'Zero-length match for regex: ' . a:regex
+        endif
+
+        if matchpos <= curcol && curcol <= matchpos + matchlen
+            return strpart(line, matchpos, matchlen)
+        endif
+
+        let start += matchlen
+    endwhile
+
+    return ""
+endfunction " }}}
+
+function! g:markdown_open_link_at_point() " {{{
+    let regex = '\v\[[^]]+\]\(https?://\S+\)'
+    let markdown_link = g:looking_at(regex)
+    if markdown_link != ''
+        let url = matchstr(markdown_link, '\v\[[^]]+\]\(\zs[^)]+\ze\)')
+        silent execute '!open ' . url
+    else
+        call s:warning('No URL found at point')
+    endif
+endfunction " }}}
+
 function! g:get_markdown_fold_level(lnum) " {{{
     let line = getline(a:lnum)
 
