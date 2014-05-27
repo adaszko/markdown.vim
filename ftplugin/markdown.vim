@@ -54,7 +54,6 @@ function! g:open_in_browser(url) " {{{
 
     if has('win32')
         let cmd = printf('!cmd /c start "" "%s"', a:url)
-        echo cmd
         silent execute cmd
         return
     endif
@@ -67,9 +66,10 @@ function! g:markdown_open_link_at_point() " {{{
     let markdown_link = g:looking_at(regex)
     if markdown_link != ''
         let url = matchstr(markdown_link, '\v\[[^]]+\]\(\zs[^)]+\ze\)')
+        let url = escape(url, '#')
         call g:open_in_browser(url)
     else
-        call s:warning('No URL found at point')
+        call s:warning('markdown: No URL at point')
     endif
 endfunction " }}}
 
