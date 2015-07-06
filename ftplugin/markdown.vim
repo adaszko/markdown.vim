@@ -12,11 +12,11 @@ set cpo&vim
 
 function! s:warning(msg) " {{{
     echohl WarningMsg
-    echo a:msg
+    echo 'markdown.vim:' a:msg
     echohl None
 endfunction " }}}
 
-function! g:looking_at(regex) " {{{
+function! LookingAt(regex) " {{{
     let start = 0
     let line = getline(".")
     let [_, _, curcol, _] = getpos(".")
@@ -46,7 +46,7 @@ function! g:looking_at(regex) " {{{
     return ""
 endfunction " }}}
 
-function! g:open_in_browser(url) " {{{
+function! OpenURL(url) " {{{
     if has('mac')
         silent execute '!open ' . a:url
         return
@@ -61,19 +61,28 @@ function! g:open_in_browser(url) " {{{
     call s:warning('Unknown OS')
 endfunction " }}}
 
-function! g:markdown_open_link_at_point() " {{{
-    let regex = '\v\[[^]]+\]\(https?://\S+\)'
-    let markdown_link = g:looking_at(regex)
+function! MarkdownOpenLinkAtPoint() " {{{
+    let markdown_link_regex = '\v\[[^]]+\]\(\S+\)'
+    let markdown_link = LookingAt(markdown_link_regex)
     if markdown_link != ''
         let url = matchstr(markdown_link, '\v\[[^]]+\]\(\zs[^)]+\ze\)')
-        let url = escape(url, '#')
-        call g:open_in_browser(url)
-    else
-        call s:warning('markdown: No URL at point')
+        let url = escape(url, '#%&')
+        call OpenURL(url)
+        return
     endif
+
+    let bare_url_regex = '\vhttps?://\S+'
+    let bare_url = LookingAt(bare_url_regex)
+    if bare_url != ''
+        let url = escape(bare_url, '#%&')
+        call OpenURL(url)
+        return
+    endif
+
+    call s:warning('No URL at point')
 endfunction " }}}
 
-function! g:get_markdown_fold_level(lnum) " {{{
+function! GetMarkdownFoldLevel(lnum) " {{{
     let line = getline(a:lnum)
 
     if line =~ '^#'
@@ -93,14 +102,14 @@ function! g:get_markdown_fold_level(lnum) " {{{
     return '='
 endfunction " }}}
 
-function! g:markdown_fold_text() " {{{
+function! MarkdownFoldText() " {{{
     let first = getline(v:foldstart)
     let nlines = v:foldend - v:foldstart
     return first . ' ' . printf('[%d]', nlines)
 endfunction " }}}
 
-setlocal foldtext=g:markdown_fold_text()
-setlocal foldexpr=g:get_markdown_fold_level(v:lnum)
+setlocal foldtext=MarkdownFoldText()
+setlocal foldexpr=GetMarkdownFoldLevel(v:lnum)
 setlocal foldmethod=expr
 
 
