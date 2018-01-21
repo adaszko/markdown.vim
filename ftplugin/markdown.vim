@@ -18,11 +18,11 @@ endfunction " }}}
 
 function! s:error(msg) " {{{
     echohl ErrorMsg
-    echo 'markdown.vim:' a:msg
+    echo 'markdown:' a:msg
     echohl None
 endfunction " }}}
 
-function! LookingAt(regex) " {{{
+function! s:LookingAt(regex) " {{{
     let start = 0
     let line = getline(".")
     let [_, lnum, col, _] = getpos(".")
@@ -52,7 +52,7 @@ function! LookingAt(regex) " {{{
     return ["", -1, -1, -1]
 endfunction " }}}
 
-function! ReplaceAt(lnum, col, len, replacement) " {{{
+function! s:ReplaceAt(lnum, col, len, replacement) " {{{
     let line = getline(a:lnum)
     let prefix = strpart(line, 0, a:col)
     let suffix = strpart(line, a:col+a:len)
@@ -60,7 +60,7 @@ function! ReplaceAt(lnum, col, len, replacement) " {{{
     call setline(a:lnum, line)
 endfunction! " }}}
 
-function! OpenURL(url) " {{{
+function! s:OpenURL(url) " {{{
     if has('mac')
         silent execute '!open ' . a:url
         return
@@ -77,31 +77,32 @@ endfunction " }}}
 
 function! MarkdownOpenLinkAtPoint() " {{{
     let markdown_link_regex = '\v\[[^]]+\]\(\S+\)'
-    let [markdown_link, _, _, _] = LookingAt(markdown_link_regex)
+    let [markdown_link, _, _, _] = s:LookingAt(markdown_link_regex)
     if markdown_link != ''
         let url = matchstr(markdown_link, '\v\[[^]]+\]\(\zs[^)]+\ze\)')
         let url = escape(url, '#%&')
-        call OpenURL(url)
+        call s:OpenURL(url)
         return
     endif
 
     let bare_url_regex = '\vhttps?://\S+'
-    let [bare_url, _, _, _] = LookingAt(bare_url_regex)
+    let [bare_url, _, _, _] = s:LookingAt(bare_url_regex)
     if bare_url != ''
         let url = escape(bare_url, '#%&')
-        call OpenURL(url)
+        call s:OpenURL(url)
         return
     endif
 
     call s:warning('No URL at point')
 endfunction " }}}
 
-function! MarkdownRetrieveURLTitle(url) " {{{
+function! s:MarkdownRetrieveURLTitle(url) " {{{
     execute "python" printf("url = '%s'", escape(a:url, "'"))
     python import requests, bs4
-    python from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    python requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    python resp = requests.get(url, verify=False)
+    python import requests.packages.urllib3
+    python requests.packages.urllib3.disable_warnings()
+    python headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+    python resp = requests.get(url, verify=False, headers=headers)
     let status_code = pyeval('resp.status_code')
     if status_code != 200
         throw printf('MarkdownRetrieveURLTitle: %s: Unexpected HTTP status code', status_code)
@@ -111,28 +112,31 @@ function! MarkdownRetrieveURLTitle(url) " {{{
         throw printf('MarkdownRetrieveURLTitle: %s: Unexpected Content-Type', content_type)
     endif
     python soup = bs4.BeautifulSoup(resp.content, 'html.parser')
-    python title = soup.find('title').text
-    python title = ' '.join(l.strip() for l in title.splitlines())
+    python title_tag = soup.find('title')
+    if pyeval('title_tag is None')
+        throw 'MarkdownRetrieveURLTitle: Title tag not found'
+    endif
+    python title = ' '.join(l.strip() for l in title_tag.text.splitlines()).strip()
     return pyeval('title')
 endfunction " }}}
 
 function! MarkdownTitlifyURLAtPoint() " {{{
     let bare_url_regex = '\vhttps?://\S+'
-    let [url, lnum, matchpos, matchlen] = LookingAt(bare_url_regex)
+    let [url, lnum, matchpos, matchlen] = s:LookingAt(bare_url_regex)
     if url == ''
         call s:warning('No URL at point')
         return
     endif
 
     try
-        let title = MarkdownRetrieveURLTitle(url)
+        let title = s:MarkdownRetrieveURLTitle(url)
     catch /MarkdownRetrieveURLTitle:.*/
         call s:error(v:exception)
         return
     endtry
 
     let replacement = printf("[%s](%s)", title, url)
-    call ReplaceAt(lnum, matchpos, matchlen, replacement)
+    call s:ReplaceAt(lnum, matchpos, matchlen, replacement)
 endfunction " }}}
 
 function! GetMarkdownFoldLevel(lnum) " {{{
