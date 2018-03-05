@@ -97,27 +97,27 @@ function! MarkdownOpenLinkAtPoint() " {{{
 endfunction " }}}
 
 function! s:MarkdownRetrieveURLTitle(url) " {{{
-    execute "python" printf("url = '%s'", escape(a:url, "'"))
-    python import requests, bs4
-    python import requests.packages.urllib3
-    python requests.packages.urllib3.disable_warnings()
-    python headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-    python resp = requests.get(url, verify=False, headers=headers)
-    let status_code = pyeval('resp.status_code')
+    execute "python3" printf("url = '%s'", escape(a:url, "'"))
+    python3 import requests, bs4
+    python3 import requests.packages.urllib3
+    python3 requests.packages.urllib3.disable_warnings()
+    python3 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+    python3 resp = requests.get(url, verify=False, headers=headers)
+    let status_code = pyxeval('resp.status_code')
     if status_code != 200
         throw printf('MarkdownRetrieveURLTitle: %s: Unexpected HTTP status code', status_code)
     endif
-    let content_type = pyeval('resp.headers.get("content-type", "").split(";")[0]')
+    let content_type = pyxeval('resp.headers.get("content-type", "").split(";")[0]')
     if content_type != 'text/html'
         throw printf('MarkdownRetrieveURLTitle: %s: Unexpected Content-Type', content_type)
     endif
-    python soup = bs4.BeautifulSoup(resp.content, 'html.parser')
-    python title_tag = soup.find('title')
-    if pyeval('title_tag is None')
+    python3 soup = bs4.BeautifulSoup(resp.content, 'html.parser')
+    python3 title_tag = soup.find('title')
+    if pyxeval('title_tag is None')
         throw 'MarkdownRetrieveURLTitle: Title tag not found'
     endif
-    python title = ' '.join(l.strip() for l in title_tag.text.splitlines()).strip()
-    return pyeval('title')
+    python3 title = ' '.join(l.strip() for l in title_tag.text.splitlines()).strip()
+    return pyxeval('title')
 endfunction " }}}
 
 function! MarkdownTitlifyURLAtPoint() " {{{
