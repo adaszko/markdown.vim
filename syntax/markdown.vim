@@ -1,9 +1,3 @@
-" Vim syntax file
-" Language:     Markdown
-" Maintainer:   Tim Pope <vimNOSPAM@tpope.org>
-" Filenames:    *.markdown
-" Last Change:  2013 May 30
-
 if exists("b:current_syntax")
   finish
 endif
