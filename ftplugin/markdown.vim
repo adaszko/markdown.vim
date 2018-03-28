@@ -80,7 +80,7 @@ function! MarkdownOpenLinkAtPoint() " {{{
     let [markdown_link, _, _, _] = s:LookingAt(markdown_link_regex)
     if markdown_link != ''
         let url = matchstr(markdown_link, '\v\[[^]]+\]\(\zs[^)]+\ze\)')
-        let url = escape(url, '#%&')
+        let url = shellescape(url)
         call s:OpenURL(url)
         return
     endif
@@ -88,7 +88,7 @@ function! MarkdownOpenLinkAtPoint() " {{{
     let bare_url_regex = '\vhttps?://\S+'
     let [bare_url, _, _, _] = s:LookingAt(bare_url_regex)
     if bare_url != ''
-        let url = escape(bare_url, '#%&')
+        let url = shellescape(bare_url)
         call s:OpenURL(url)
         return
     endif
