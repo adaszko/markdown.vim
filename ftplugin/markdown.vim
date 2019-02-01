@@ -69,7 +69,7 @@ function! s:OpenURL(url) " {{{
     call s:warning('Unknown OS')
 endfunction " }}}
 
-function! MarkdownOpenLinkAtPoint() " {{{
+function! s:MarkdownOpenLinkAtPoint() " {{{
     let markdown_link_regex = '\v\[[^]]+\]\(\S+\)'
     let [markdown_link, _, _, _] = s:LookingAt(markdown_link_regex)
     if markdown_link != ''
@@ -112,7 +112,7 @@ function! s:MarkdownRetrieveURLTitle(url) " {{{
     return pyxeval('title')
 endfunction " }}}
 
-function! MarkdownTitlifyURLAtPoint() " {{{
+function! s:MarkdownTitlifyURLAtPoint() " {{{
     let bare_url_regex = '\vhttps?://\S+'
     let [url, lnum, matchpos, matchlen] = s:LookingAt(bare_url_regex)
     if url == ''
@@ -161,6 +161,10 @@ endfunction " }}}
 setlocal foldtext=MarkdownFoldText()
 setlocal foldexpr=GetMarkdownFoldLevel(v:lnum)
 setlocal foldmethod=expr
+
+
+nnoremap <Plug>MarkdownTitlifyURLAtPoint :<C-U>call <SID>MarkdownTitlifyURLAtPoint()<CR>
+nnoremap <Plug>MarkdownOpenLinkAtPoint :<C-U>call <SID>MarkdownOpenLinkAtPoint()<CR>
 
 
 let &cpo = s:cpo_save
