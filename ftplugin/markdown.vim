@@ -62,13 +62,7 @@ endfunction! " }}}
 
 function! s:OpenURL(url) " {{{
     if has('mac')
-        silent execute '!open ' . a:url
-        return
-    endif
-
-    if has('win32')
-        let cmd = printf('!cmd /c start "" "%s"', a:url)
-        silent execute cmd
+        silent execute '!open ' . escape(shellescape(a:url), "#!$%")
         return
     endif
 
@@ -80,7 +74,6 @@ function! MarkdownOpenLinkAtPoint() " {{{
     let [markdown_link, _, _, _] = s:LookingAt(markdown_link_regex)
     if markdown_link != ''
         let url = matchstr(markdown_link, '\v\[[^]]+\]\(\zs[^)]+\ze\)')
-        let url = shellescape(url)
         call s:OpenURL(url)
         return
     endif
@@ -88,8 +81,7 @@ function! MarkdownOpenLinkAtPoint() " {{{
     let bare_url_regex = '\vhttps?://\S+'
     let [bare_url, _, _, _] = s:LookingAt(bare_url_regex)
     if bare_url != ''
-        let url = shellescape(bare_url)
-        call s:OpenURL(url)
+        call s:OpenURL(bare_url)
         return
     endif
 
