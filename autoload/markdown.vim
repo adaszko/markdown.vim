@@ -81,4 +81,30 @@ function! markdown#get_indent() " {{{
     return -1
 endfunction " }}}
 
+function! markdown#get_fold_level(lnum) " {{{
+    let line = getline(a:lnum)
+
+    if line =~ '^#'
+        return '>' . matchend(line, '\v^#+')
+    endif
+
+    let next = getline(a:lnum + 1)
+
+    if next =~ '\v^--+'
+        return '>2'
+    endif
+
+    if next =~ '\v^\=\=+'
+        return '>1'
+    endif
+
+    return '='
+endfunction " }}}
+
+function! markdown#get_fold_text() " {{{
+    let first = getline(v:foldstart)
+    let nlines = v:foldend - v:foldstart
+    return first . ' ' . printf('[%d]', nlines)
+endfunction " }}}
+
 " vim:foldmethod=marker

@@ -131,36 +131,9 @@ function! s:MarkdownTitlifyURLAtPoint() " {{{
     call s:ReplaceAt(lnum, matchpos, matchlen, replacement)
 endfunction " }}}
 
-function! GetMarkdownFoldLevel(lnum) " {{{
-    let line = getline(a:lnum)
 
-    if line =~ '^#'
-        return '>' . matchend(line, '\v^#+')
-    endif
-
-    let next = getline(a:lnum + 1)
-
-    if next =~ '\v^--+'
-        return '>2'
-    endif
-
-    if next =~ '\v^\=\=+'
-        return '>1'
-    endif
-
-    return '='
-endfunction " }}}
-
-function! MarkdownFoldText() " {{{
-    let first = getline(v:foldstart)
-    let nlines = v:foldend - v:foldstart
-    return first . ' ' . printf('[%d]', nlines)
-endfunction " }}}
-
-
-
-setlocal foldtext=MarkdownFoldText()
-setlocal foldexpr=GetMarkdownFoldLevel(v:lnum)
+setlocal foldtext=markdown#get_fold_text()
+setlocal foldexpr=markdown#get_fold_level(v:lnum)
 setlocal foldmethod=expr
 
 setlocal nocindent
