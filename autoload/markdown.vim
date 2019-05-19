@@ -29,8 +29,8 @@ function! markdown#is_heading_line(line) " {{{
     return a:line =~# '\v^\s*#'
 endfunction " }}}
 
-function! markdown#get_indent() " {{{
-    let line = getline(v:lnum)
+function! markdown#get_indent(lnum) " {{{
+    let line = getline(a:lnum)
 
     " Header
     if markdown#is_heading_line(line)
@@ -39,7 +39,7 @@ function! markdown#get_indent() " {{{
 
     " Bulleted list
     if line =~# '\v^\s*\*'
-        let preceding_line_number = prevnonblank(v:lnum - 1)
+        let preceding_line_number = prevnonblank(a:lnum - 1)
         " The first bullet point has a fixed indentation
         if preceding_line_number == 0
             return 1

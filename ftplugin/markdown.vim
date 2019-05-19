@@ -139,7 +139,7 @@ setlocal foldmethod=expr
 setlocal nocindent
 setlocal nosmartindent
 setlocal autoindent
-setlocal indentexpr=markdown#get_indent()
+setlocal indentexpr=markdown#get_indent(v:lnum)
 
 
 nnoremap <Plug>MarkdownTitlifyURLAtPoint :<C-U>call <SID>MarkdownTitlifyURLAtPoint()<CR>
