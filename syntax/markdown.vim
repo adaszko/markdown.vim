@@ -46,7 +46,8 @@ syn region markdownH6 matchgroup=markdownHeadingDelimiter start="#######\@!" end
 
 syn match markdownBlockquote ">\%(\s\|$\)" contained nextgroup=@markdownBlock
 
-syn region markdownCodeBlock start="    \|\t" end="$" contained
+" Interferes with nested bulleted lists
+" syn region markdownCodeBlock start="    \|\t" end="$" contained
 
 " TODO: real nesting
 syn match markdownListMarker "\%(\t\| \{0,4\}\)[-*+]\%(\s\+\S\)\@=" contained contains=markdownBulletListMarker

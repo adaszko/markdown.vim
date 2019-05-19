@@ -158,9 +158,15 @@ function! MarkdownFoldText() " {{{
 endfunction " }}}
 
 
+
 setlocal foldtext=MarkdownFoldText()
 setlocal foldexpr=GetMarkdownFoldLevel(v:lnum)
 setlocal foldmethod=expr
+
+setlocal nocindent
+setlocal nosmartindent
+setlocal autoindent
+setlocal indentexpr=markdown#get_indent()
 
 
 nnoremap <Plug>MarkdownTitlifyURLAtPoint :<C-U>call <SID>MarkdownTitlifyURLAtPoint()<CR>
