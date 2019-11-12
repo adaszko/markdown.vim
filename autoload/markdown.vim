@@ -251,7 +251,7 @@ function! markdown#toggle_done_status_of_line(lnum) " {{{
         endif
     endfunction
 
-    let updated = substitute(line, '\v^(\s*\*)\s*\[([ ✓✗])\]\s*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3], m[4])}, '')
+    let updated = substitute(line, '\v^(\s*%(\*|\=\>|\<\=))\s*\[([ ✓✗])\]\s*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3], m[4])}, '')
     if line != updated
         call setline(a:lnum, updated)
     endif
@@ -278,7 +278,7 @@ function! markdown#toggle_task_status_of_line(lnum) " {{{
         endif
     endfunction
 
-    let updated = substitute(line, '\v^(\s*\*)\s*(\[[ x]\])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3])}, '')
+    let updated = substitute(line, '\c\v^(\s*%(\*|\=\>|\<\=))\s*(\[[ x]\])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3])}, '')
     if line != updated
         call setline(a:lnum, updated)
     endif
