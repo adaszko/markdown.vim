@@ -174,7 +174,7 @@ function! markdown#increase_indent(spaces) " {{{
         return a:spaces - 1 + &shiftwidth
     endif
 
-    return a:spaces + &shiftwidth
+    return (a:spaces - (a:spaces % &shiftwidth)) + &shiftwidth
 endfunction " }}}
 
 function! markdown#is_heading_line(line) " {{{
@@ -191,42 +191,16 @@ function! markdown#get_indent(lnum) " {{{
 
     " Bulleted list
     if line =~# '\v^\s*\*'
-        let preceding_line_number = prevnonblank(a:lnum - 1)
-        " The first bullet point has a fixed indentation
-        if preceding_line_number == 0
-            return 1
-        endif
-
-        let preceding_line = getline(preceding_line_number)
-
-        if markdown#is_heading_line(preceding_line)
-            return 1
-        endif
-
-        let preceding_line_indent = markdown#get_line_indent(preceding_line)
-        echomsg preceding_line_indent
-
-        " Assume the preceding line has been indented already
-        if !markdown#is_bullet_point_indentation(preceding_line_indent)
-            return -1
-        endif
-
         let current_line_indent = markdown#get_line_indent(line)
-        if current_line_indent < preceding_line_indent
-            return preceding_line_indent
-        endif
-
-        if current_line_indent == preceding_line_indent
+        if markdown#is_bullet_point_indentation(current_line_indent)
             return -1
+        else
+            return markdown#increase_indent(current_line_indent)
         endif
-
-        if current_line_indent > preceding_line_indent
-            return markdown#increase_indent(preceding_line_indent)
-        endif
-
-        return 1
+        return -1
     endif
 
+    " Blockquote
     if line =~ '\v^\s*\>'
         return 0
     endif
