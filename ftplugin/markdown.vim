@@ -19,9 +19,6 @@ setlocal nosmartindent
 setlocal autoindent
 setlocal indentexpr=markdown#get_indent(v:lnum)
 
-nnoremap <Plug>MarkdownTitlifyURLAtPoint :<C-U>call markdown#titlify_url_at_point()<CR>
-nnoremap <Plug>MarkdownOpenLinkAtPoint :<C-U>call markdown#open_link_at_point()<CR>
-
 
 let &cpo = s:cpo_save
 unlet s:cpo_save
