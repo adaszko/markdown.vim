@@ -170,6 +170,10 @@ function! markdown#is_bullet_point_indentation(spaces) " {{{
 endfunction " }}}
 
 function! markdown#increase_indent(spaces) " {{{
+    if a:spaces == 0
+        return 1
+    endif
+
     if a:spaces == 1
         return a:spaces - 1 + &shiftwidth
     endif
