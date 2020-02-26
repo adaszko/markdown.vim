@@ -133,6 +133,9 @@ if m is not None:
 if title.startswith('GitHub -'):
     title = title[len('GitHub - '):]
 
+if title.endswith(' - YouTube'):
+    title = title[:-len(' - YouTube')]
+
 title = title.rstrip('.')
 EOF
     return pyxeval('title')
