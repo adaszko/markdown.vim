@@ -71,18 +71,25 @@ function! markdown#get_url_at_point() " {{{
         return bare_url
     endif
 
+    let note_url_regex = '\vnote://'
+    let [note_url, _, _, _] = markdown#looking_at(note_url_regex)
+    if note_url != ''
+        return note_url
+    endif
+
     return ''
 endfunction " }}}
 
 function! markdown#open_link_at_point() " {{{
     let url = markdown#get_url_at_point()
 
-    if url == ''
+    if url =~ '\v^https?://'
+        call markdown#open_url(url)
+    elseif url =~ '\v^note://'
+        execute 'edit' url
+    elseif url == ''
         call markdown#warning('No URL at point')
-        return
     endif
-
-    call markdown#open_url(url)
 endfunction " }}}
 
 function! markdown#retrieve_url_title(url) " {{{
