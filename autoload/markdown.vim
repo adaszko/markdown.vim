@@ -83,7 +83,7 @@ endfunction " }}}
 function! markdown#open_link_at_point() " {{{
     let url = markdown#get_url_at_point()
 
-    if url =~ '\v^https?://'
+    if url =~ '\v^https?://' || url =~ '\v^file://'
         call markdown#open_url(url)
     elseif url =~ '\v^note://'
         execute 'edit' url
@@ -285,14 +285,14 @@ function! markdown#toggle_task_status_of_line(lnum) " {{{
     function! s:cycle_done_status(everything, prefix, status, suffix)
         if a:status == ""
             return printf("%s [ ] %s", a:prefix, a:suffix)
-        elseif a:status == "[ ]" || a:status == "[x]" || a:status == "[X]"
+        elseif a:status == "[ ]" || a:status == "[x]" || a:status == "[X]" || a:status == "[✓]" || a:status == "[✗]"
             return printf("%s %s", a:prefix, a:suffix)
         else
             return a:everything
         endif
     endfunction
 
-    let updated = substitute(line, '\c\v^(\s*%(\*|\=\>|\<\=))\s*(\[[ x]\])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3])}, '')
+    let updated = substitute(line, '\c\v^(\s*%(\*|\=\>|\<\=))\s*(\[[ x✓✗]\])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3])}, '')
     if line != updated
         call setline(a:lnum, updated)
     endif
