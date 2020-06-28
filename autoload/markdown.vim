@@ -1,3 +1,6 @@
+let s:this_plugin_dir = fnamemodify(resolve(expand('<sfile>:p')), ':h:h')
+
+
 function! markdown#warning(msg) " {{{
     echohl WarningMsg
     echo 'markdown.vim:' a:msg
@@ -93,52 +96,15 @@ function! markdown#open_link_at_point() " {{{
 endfunction " }}}
 
 function! markdown#retrieve_url_title(url) " {{{
-    execute "python3" printf("url = '%s'", escape(a:url, "'"))
-    python3 import requests, bs4
-    python3 import requests.packages.urllib3
-    python3 requests.packages.urllib3.disable_warnings()
-    python3 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-    python3 head = requests.head(url, verify=False, headers=headers, allow_redirects=True, timeout=2)
-    let head_status_code = pyxeval('head.status_code')
-    if head_status_code != 405
-        if head_status_code != 200
-            throw printf('markdown#retrieve_url_title: %s: Unexpected HTTP status code', head_status_code)
-        endif
-        let content_type = pyxeval('head.headers.get("content-type", "").split(";")[0]')
-        if content_type != 'text/html'
-            throw printf('markdown#retrieve_url_title: %s: Unexpected Content-Type', content_type)
-        endif
-    endif
-    python3 resp = requests.get(url, verify=False, headers=headers, timeout=3)
-    let status_code = pyxeval('resp.status_code')
-    if status_code != 200
-        throw printf('markdown#retrieve_url_title: %s: Unexpected HTTP status code', status_code)
-    endif
-    let content_type = pyxeval('resp.headers.get("content-type", "").split(";")[0]')
-    if content_type != 'text/html'
-        throw printf('markdown#retrieve_url_title: %s: Unexpected Content-Type', content_type)
-    endif
-    python3 soup = bs4.BeautifulSoup(resp.content, 'html.parser')
-    python3 title_tag = soup.find('title')
-    if pyxeval('title_tag is None')
-        throw 'markdown#retrieve_url_title: Title tag not found'
-    endif
-    python3 title = ' '.join(l.strip() for l in title_tag.text.splitlines()).strip()
-    python3 <<EOF
-import re
-m = re.match('^GitHub - [^/]+/(.*)', title)
-if m is not None:
-    title = m.groups()[0]
-
-if title.startswith('GitHub -'):
-    title = title[len('GitHub - '):]
-
-if title.endswith(' - YouTube'):
-    title = title[:-len(' - YouTube')]
-
-title = title.rstrip('.')
-EOF
-    return pyxeval('title')
+    let scripts_dir = printf("%s/scripts", s:this_plugin_dir)
+    let current_directory = getcwd()
+    try
+        execute 'lcd' scripts_dir
+        let output = system(printf("poetry run ./gettitle.py %s", shellescape(a:url)))
+        return substitute(output, '\n\+$', '', '')
+    finally
+        execute 'lcd' current_directory
+    endtry
 endfunction " }}}
 
 function! markdown#titlify_url_at_point() " {{{
