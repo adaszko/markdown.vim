@@ -9,6 +9,7 @@ import re
 import sys
 import string
 from io import StringIO, BytesIO
+from urllib.parse import urlparse
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.psparser import literal_name
@@ -536,16 +537,23 @@ def get_html_title(content):
 
 
 def get_url_title(url):
+    parsed = urlparse(url)
+
+    if parsed.scheme == 'file':
+        with open(parsed.path, 'rb') as file:
+            return get_title_from_io(file)
+
     requests.packages.urllib3.disable_warnings()
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-    head = requests.head(url, verify=False, headers=headers, allow_redirects=True, timeout=2)
-    if head.status_code != 405:
-        if head.status_code != 200:
-            raise printf('markdown#retrieve_url_title: %s: Unexpected HTTP status code', head.status_code)
-        content_type = head.headers.get("content-type", "").split(";")[0]
+
+    resp = requests.get(url, verify=False, headers=headers, timeout=3, stream=True)
+
+    if resp.status_code != 405:
+        if resp.status_code != 200:
+            raise printf('markdown#retrieve_url_title: %s: Unexpected HTTP status code', resp.status_code)
+        content_type = resp.headers.get("content-type", "").split(";")[0]
         if content_type not in ('text/html', 'application/pdf'):
             raise printf('markdown#retrieve_url_title: %s: Unexpected Content-Type', content_type)
-    resp = requests.get(url, verify=False, headers=headers, timeout=3)
 
     status_code = resp.status_code
     if status_code != 200:

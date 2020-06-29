@@ -108,7 +108,7 @@ function! markdown#retrieve_url_title(url) " {{{
 endfunction " }}}
 
 function! markdown#titlify_url_at_point() " {{{
-    let bare_url_regex = '\vhttps?://\S+'
+    let bare_url_regex = '\v(https?|file)://\S+'
     let [url, lnum, matchpos, matchlen] = markdown#looking_at(bare_url_regex)
     if url == ''
         call markdown#warning('No URL at point')
