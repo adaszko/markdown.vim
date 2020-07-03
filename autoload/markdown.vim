@@ -101,6 +101,9 @@ function! markdown#retrieve_url_title(url) " {{{
     try
         execute 'lcd' scripts_dir
         let output = system(printf("poetry run ./gettitle.py %s", shellescape(a:url)))
+        if v:shell_error != 0
+            throw printf("markdown#retrieve_url_title: %s", trim(output, "\n"))
+        endif
         return substitute(output, '\n\+$', '', '')
     finally
         execute 'lcd' current_directory
@@ -118,7 +121,8 @@ function! markdown#titlify_url_at_point() " {{{
     try
         let title = markdown#retrieve_url_title(url)
     catch /markdown#retrieve_url_title:.*/
-        call markdown#error(v:exception)
+        let message = matchstr(v:exception, 'markdown#retrieve_url_title: \zs.*\ze')
+        call markdown#error(message)
         return
     endtry
 

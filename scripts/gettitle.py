@@ -29,6 +29,18 @@ MISSING_CHAR = None
 WITHIN_WORD_MOVE_LIMIT = 0
 
 
+class TitleTagNotFoundError(Exception):
+    pass
+
+
+class UnexpectedHTTPStatusCodeError(Exception):
+    pass
+
+
+class UnexpectedContentTypeError(Exception):
+    pass
+
+
 def verbose(*s):
     if VERBOSE:
         print(*s)
@@ -519,7 +531,7 @@ def get_html_title(content):
     soup = bs4.BeautifulSoup(content, 'html.parser')
     title_tag = soup.find('title')
     if title_tag is None:
-        raise 'markdown#retrieve_url_title: Title tag not found'
+        raise TitleTagNotFoundError()
     title = ' '.join(l.strip() for l in title_tag.text.splitlines()).strip()
 
     m = re.match('^GitHub - [^/]+/(.*)', title)
@@ -550,21 +562,21 @@ def get_url_title(url):
 
     if resp.status_code != 405:
         if resp.status_code != 200:
-            raise printf('markdown#retrieve_url_title: %s: Unexpected HTTP status code', resp.status_code)
+            raise UnexpectedHTTPStatusCodeError(resp.status_code)
         content_type = resp.headers.get("content-type", "").split(";")[0]
         if content_type not in ('text/html', 'application/pdf'):
-            raise printf('markdown#retrieve_url_title: %s: Unexpected Content-Type', content_type)
+            raise UnexpectedContentTypeError(content_type)
 
     status_code = resp.status_code
     if status_code != 200:
-        raise printf('markdown#retrieve_url_title: %s: Unexpected HTTP status code', status_code)
+        raise UnexpectedHTTPStatusCodeError(status_code)
     content_type = resp.headers.get("content-type", "").split(";")[0]
     if content_type == 'text/html':
         return get_html_title(resp.content)
     elif content_type == 'application/pdf':
         return get_title_from_io(BytesIO(resp.content))
     else:
-        raise printf('markdown#retrieve_url_title: %s: Unexpected Content-Type', content_type)
+        raise UnexpectedContentTypeError(content_type)
 
 
 def main():
@@ -572,7 +584,20 @@ def main():
         print("Usage: {} URL".format(sys.argv[0]))
         return 1
     url = sys.argv[1]
-    print(get_url_title(url))
+    try:
+        print(get_url_title(url))
+    except TitleTagNotFoundError as e:
+        print("No <title> found")
+        return 1
+    except UnexpectedHTTPStatusCodeError as e:
+        print("Unexpected HTTP status code: {}".format(e.args[0]))
+        return 1
+    except UnexpectedContentTypeError as e:
+        print("Unexpected content type: {}".format(e.args[0]))
+        return 1
+    except Exception as e:
+        print(e)
+        return 1
     return 0
 
 
