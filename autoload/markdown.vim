@@ -221,21 +221,19 @@ endfunction " }}}
 function! markdown#toggle_done_status_of_line(lnum) " {{{
     let line = getline(a:lnum)
 
+    " https://github.github.com/gfm/#task-list-items-extension-
     function! s:cycle_done_status(everything, prefix, status, date, suffix)
         if a:status == " "
             let today = strftime("%F")
-            return printf("%s [✓] %s %s", a:prefix, today, a:suffix)
-        elseif a:status == "✓"
-            let today = strftime("%F")
-            return printf("%s [✗] %s %s", a:prefix, today, a:suffix)
-        elseif a:status == "✗"
+            return printf("%s [x] %s %s", a:prefix, today, a:suffix)
+        elseif a:status == "x"
             return printf("%s [ ] %s", a:prefix, a:suffix)
         else
             return a:everything
         endif
     endfunction
 
-    let updated = substitute(line, '\v^(\s*%(\*|\=\>|\<\=))\s*\[([ ✓✗])\]\s*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3], m[4])}, '')
+    let updated = substitute(line, '\v^(\s*%(\*|\=\>|\<\=))\s*\[([ x])\]\s*([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3], m[4])}, '')
     if line != updated
         call setline(a:lnum, updated)
     endif
@@ -255,14 +253,14 @@ function! markdown#toggle_task_status_of_line(lnum) " {{{
     function! s:cycle_done_status(everything, prefix, status, suffix)
         if a:status == ""
             return printf("%s [ ] %s", a:prefix, a:suffix)
-        elseif a:status == "[ ]" || a:status == "[x]" || a:status == "[X]" || a:status == "[✓]" || a:status == "[✗]"
+        elseif a:status == "[ ]" || a:status == "[x]" || a:status == "[X]"
             return printf("%s %s", a:prefix, a:suffix)
         else
             return a:everything
         endif
     endfunction
 
-    let updated = substitute(line, '\c\v^(\s*%(\*|\=\>|\<\=))\s*(\[[ x✓✗]\])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3])}, '')
+    let updated = substitute(line, '\c\v^(\s*%(\*|\=\>|\<\=))\s*(\[[ x]\])?\s*(.*)', {m -> s:cycle_done_status(m[0], m[1], m[2], m[3])}, '')
     if line != updated
         call setline(a:lnum, updated)
     endif
