@@ -74,6 +74,12 @@ function! markdown#get_url_at_point() " {{{
         return bare_url
     endif
 
+    let bare_file_regex = '\vfile://\S+'
+    let [bare_url, _, _, _] = markdown#looking_at(bare_file_regex)
+    if bare_url != ''
+        return bare_url
+    endif
+
     let note_url_regex = '\vnote://'
     let [note_url, _, _, _] = markdown#looking_at(note_url_regex)
     if note_url != ''

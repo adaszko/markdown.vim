@@ -41,6 +41,10 @@ class UnexpectedContentTypeError(Exception):
     pass
 
 
+class UnexpectedFileExtension(Exception):
+    pass
+
+
 def verbose(*s):
     if VERBOSE:
         print(*s)
@@ -436,7 +440,7 @@ class TextOnlyDevice(PDFDevice):
             ts.Tm = utils.translate_matrix(ts.Tm, (tx, ty))
 
 
-def get_title_from_io(pdf_io):
+def get_pdf_title_from_io(pdf_io):
     # pylint: disable=too-many-locals
     parser = PDFParser(pdf_io)
     # if pdf is protected with a pwd, 2nd param here is password
@@ -553,7 +557,12 @@ def get_url_title(url):
 
     if parsed.scheme == 'file':
         with open(parsed.path, 'rb') as file:
-            return get_title_from_io(file)
+            if parsed.path.endswith('.html'):
+                return get_html_title(file)
+            elif parsed.path.endswith('.pdf'):
+                return get_pdf_title_from_io(file)
+            else:
+                raise UnexpectedFileExtension(parser.path)
 
     requests.packages.urllib3.disable_warnings()
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
@@ -574,7 +583,7 @@ def get_url_title(url):
     if content_type == 'text/html':
         return get_html_title(resp.content)
     elif content_type == 'application/pdf':
-        return get_title_from_io(BytesIO(resp.content))
+        return get_pdf_title_from_io(BytesIO(resp.content))
     else:
         raise UnexpectedContentTypeError(content_type)
 
