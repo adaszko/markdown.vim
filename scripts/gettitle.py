@@ -29,7 +29,7 @@ MISSING_CHAR = None
 WITHIN_WORD_MOVE_LIMIT = 0
 
 
-class TitleTagNotFoundError(Exception):
+class TitleNotFoundError(Exception):
     pass
 
 
@@ -531,13 +531,33 @@ def retrieve_spaces(first_page, title_without_space, p=0, t=0, result=""):
         first_page, title_without_space, p+1, t, result)
 
 
-def get_html_title(content):
-    soup = bs4.BeautifulSoup(content, 'html.parser')
+def get_title_tag(soup):
     title_tag = soup.find('title')
     if title_tag is None:
-        raise TitleTagNotFoundError()
+        raise TitleNotFoundError()
     title = ' '.join(l.strip() for l in title_tag.text.splitlines()).strip()
+    return title
 
+
+def get_first_header_tag(soup):
+    h_tag = soup.find('h1')
+    if h_tag is None:
+        h_tag = soup.find('h2')
+        if h_tag is None:
+            h_tag = soup.find('h3')
+            if h_tag is None:
+                h_tag = soup.find('h4')
+                if h_tag is None:
+                    h_tag = soup.find('h5')
+                    if h_tag is None:
+                        h_tag = soup.find('h6')
+                        if h_tag is None:
+                            raise TitleNotFound()
+    title = ' '.join(l.strip() for l in h_tag.text.splitlines()).strip()
+    return title
+
+
+def clean_up_title(title):
     m = re.match('^GitHub - [^/]+/(.*)', title)
     if m is not None:
         title = m.groups()[0]
@@ -550,6 +570,15 @@ def get_html_title(content):
 
     title = title.rstrip('.')
     return title
+
+
+def get_html_title(content):
+    soup = bs4.BeautifulSoup(content, 'html.parser')
+    try:
+        title = get_title_tag(soup)
+    except TitleNotFoundError:
+        title = get_first_header_tag(soup)
+    return clean_up_title(title)
 
 
 def get_url_title(url):
@@ -573,7 +602,7 @@ def get_url_title(url):
         if resp.status_code != 200:
             raise UnexpectedHTTPStatusCodeError(resp.status_code)
         content_type = resp.headers.get("content-type", "").split(";")[0]
-        if content_type not in ('text/html', 'application/pdf'):
+        if content_type not in ('text/html', 'application/pdf', 'application/octet-stream'):
             raise UnexpectedContentTypeError(content_type)
 
     status_code = resp.status_code
@@ -583,6 +612,8 @@ def get_url_title(url):
     if content_type == 'text/html':
         return get_html_title(resp.content)
     elif content_type == 'application/pdf':
+        return get_pdf_title_from_io(BytesIO(resp.content))
+    elif content_type == 'application/octet-stream':
         return get_pdf_title_from_io(BytesIO(resp.content))
     else:
         raise UnexpectedContentTypeError(content_type)
@@ -595,7 +626,7 @@ def main():
     url = sys.argv[1]
     try:
         print(get_url_title(url))
-    except TitleTagNotFoundError as e:
+    except TitleNotFoundError as e:
         print("No <title> found")
         return 1
     except UnexpectedHTTPStatusCodeError as e:
