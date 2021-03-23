@@ -11,6 +11,7 @@ python = "^3.8"
 bs4 = "^0.0.1"
 requests = "^2.24.0"
 pdfminer = "^20191125"
+beautifulsoup4 = "^4.9.3"
 
 [tool.poetry.dev-dependencies]
 
