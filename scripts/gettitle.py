@@ -552,7 +552,7 @@ def get_first_header_tag(soup):
                     if h_tag is None:
                         h_tag = soup.find('h6')
                         if h_tag is None:
-                            raise TitleNotFound()
+                            raise TitleNotFoundError()
     title = ' '.join(l.strip() for l in h_tag.text.splitlines()).strip()
     return title
 
